@@ -1,0 +1,1559 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Given Away</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rozha+One&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one column read like a painted scroll. A stage panel on top, a sari-border band, then the story panel.
+   One deliberate world: indigo night ground, lac red and turmeric from the dyes of the period, archive slips on paper. */
+:root {
+  --night: #151830;
+  --panel: #1e2242;
+  --raise: #272c54;
+  --line: #3a4070;
+  --fg: #efe8d8;
+  --muted: #aeaac1;
+  --lac: #c8452f;
+  --turmeric: #e3a63c;
+  --paper: #ece4d1;
+  --paper-ink: #2a2420;
+  --paper-mark: #8a2e1f;
+  --paper-rule: #b9ad94;
+  --display: "Rozha One", "Playfair Display", Georgia, serif;
+  --body: "Literata", Georgia, "Times New Roman", serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+html, body { background: var(--night); color: var(--fg); }
+body { font-family: var(--body); font-size: 17.5px; line-height: 1.62; margin: 0; }
+* { box-sizing: border-box; }
+
+.wrap {
+  max-width: 720px; margin: 0 auto;
+  padding-block: 18px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+/* HUD */
+.hud {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+  font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--muted); padding-bottom: 12px;
+}
+.hud .who { color: var(--fg); }
+.hud nav { display: flex; gap: 16px; margin-left: auto; }
+.linkbtn {
+  background: none; border: 0; padding: 4px 0; cursor: pointer;
+  color: var(--muted); font: inherit; letter-spacing: inherit; text-transform: inherit;
+  text-decoration: underline; text-underline-offset: 3px;
+}
+.linkbtn:hover, .linkbtn:focus-visible { color: var(--turmeric); outline: none; }
+
+/* Life thread */
+.thread { display: flex; align-items: center; margin: 2px 4px 6px; }
+.thread .node { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--line); background: var(--night); flex: none; }
+.thread .node.done { background: var(--turmeric); border-color: var(--turmeric); }
+.thread .node.now { border-color: var(--turmeric); box-shadow: 0 0 0 4px color-mix(in srgb, var(--turmeric) 22%, transparent); }
+.thread .seg { height: 2px; flex: 1; background: var(--line); }
+.thread .seg.done { background: var(--turmeric); }
+.thread-labels { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+.thread-labels span.now { color: var(--turmeric); }
+
+/* Stage */
+.stage { position: relative; border-radius: 8px 8px 0 0; overflow: hidden; background: var(--raise); aspect-ratio: 400 / 250; max-width: 100%; }
+.stage svg { display: block; width: 100%; height: 100%; animation: fadein 0.7s ease both; }
+.stage .fig { animation: figin 0.9s ease both; }
+.stage .flame { animation: flicker 2.4s ease-in-out infinite; transform-origin: center bottom; transform-box: fill-box; }
+.stage .cap {
+  position: absolute; left: 10px; bottom: 10px;
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+  background: color-mix(in srgb, var(--night) 82%, transparent); color: var(--fg);
+  padding: 4px 8px; border-radius: 3px;
+}
+.band {
+  height: 16px;
+  background:
+    linear-gradient(var(--turmeric), var(--turmeric)) 0 0 / 100% 2px no-repeat,
+    linear-gradient(var(--turmeric), var(--turmeric)) 0 100% / 100% 2px no-repeat,
+    conic-gradient(from 135deg at 50% 0, var(--lac) 90deg, transparent 0) 0 4px / 14px 8px repeat-x,
+    var(--panel);
+}
+
+/* Story */
+.story { background: var(--panel); border-radius: 0 0 8px 8px; padding: 24px 26px 28px; }
+.story.solo { border-radius: 8px; }
+.eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--turmeric); }
+h1, h2 { font-family: var(--display); font-weight: 400; text-wrap: balance; margin: 0; line-height: 1.08; color: var(--fg); }
+h1 { font-size: clamp(46px, 11vw, 76px); margin: 4px 0 10px; }
+h2 { font-size: clamp(30px, 6.4vw, 42px); margin: 6px 0 4px; }
+h3 { font-family: var(--mono); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--turmeric); font-weight: 500; margin: 26px 0 10px; }
+.meta { font-family: var(--mono); font-size: 12.5px; color: var(--muted); margin-bottom: 16px; }
+p { margin: 0 0 14px; max-width: 62ch; }
+.lede { font-size: 19px; }
+.note { font-size: 14.5px; color: var(--muted); }
+
+.reveal > * { animation: rise 0.55s ease both; animation-delay: calc(var(--i, 0) * 90ms); }
+@keyframes rise { from { opacity: 0.15; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes fadein { from { opacity: 0.4; } to { opacity: 1; } }
+@keyframes figin { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@keyframes flicker { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08, 0.94); } }
+@media (prefers-reduced-motion: reduce) { *, *::before { animation: none !important; transition: none !important; } }
+
+/* Choices */
+.choices { display: grid; gap: 10px; margin-top: 22px; }
+.choice {
+  display: flex; gap: 14px; align-items: baseline; text-align: left;
+  background: var(--raise); color: var(--fg); border: 1px solid var(--line); border-radius: 6px;
+  padding: 14px 16px; font: inherit; cursor: pointer; transition: transform 0.15s, border-color 0.15s;
+}
+.choice .k { font-family: var(--display); color: var(--turmeric); font-size: 22px; line-height: 1; flex: none; width: 16px; }
+.choice:hover, .choice:focus-visible { border-color: var(--turmeric); transform: translateY(-1px); outline: none; }
+.keyhint { font-family: var(--mono); font-size: 11.5px; color: var(--muted); margin-top: 10px; }
+
+.primary {
+  background: var(--lac); color: var(--fg); border: 0; border-radius: 6px;
+  padding: 13px 22px; font: 600 16px var(--body); cursor: pointer;
+}
+.primary:hover { filter: brightness(1.08); }
+.primary:focus-visible, .ghost:focus-visible { outline: 2px solid var(--turmeric); outline-offset: 2px; }
+.primary:disabled { opacity: 0.4; cursor: default; filter: none; }
+.ghost { background: transparent; color: var(--fg); border: 1px solid var(--line); border-radius: 6px; padding: 12px 18px; font: inherit; cursor: pointer; }
+.ghost:hover { border-color: var(--turmeric); }
+.foot { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+
+/* Outcome */
+.chosen { font-family: var(--mono); font-size: 12.5px; color: var(--muted); border-left: 2px solid var(--turmeric); padding-left: 10px; margin-bottom: 16px; }
+.voice { position: relative; background: var(--raise); border-radius: 10px; padding: 14px 16px; margin: 22px 0 18px; font-style: italic; max-width: 58ch; }
+.voice::before { content: ""; position: absolute; left: 22px; top: -8px; border: 8px solid transparent; border-top: 0; border-bottom-color: var(--raise); }
+.voice .who { display: block; font-style: normal; font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--turmeric); margin-bottom: 4px; }
+
+.archive {
+  background: var(--paper); color: var(--paper-ink); border-radius: 2px;
+  padding: 16px 18px 10px; margin-top: 22px; font-size: 15px; line-height: 1.55;
+  transform: rotate(-0.4deg);
+}
+.archive .head {
+  display: flex; justify-content: space-between; gap: 8px;
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--paper-mark);
+  border-bottom: 1px dashed var(--paper-rule); padding-bottom: 6px; margin-bottom: 10px;
+}
+.archive p { margin: 0 0 10px; }
+.archive .src { display: block; font-family: var(--mono); font-size: 11.5px; color: var(--paper-ink); opacity: 0.72; margin-top: 3px; }
+.verify { font-family: var(--mono); font-size: 11px; color: var(--lac); white-space: nowrap; }
+
+/* Start screen pickers */
+.picker { margin: 18px 0 4px; }
+.picker .label { font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.opts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.opts.names { display: flex; flex-wrap: wrap; }
+.opt {
+  background: var(--raise); color: var(--fg); border: 1px solid var(--line); border-radius: 6px;
+  padding: 11px 14px; font: inherit; text-align: left; cursor: pointer; min-width: 0;
+}
+.opts.names .opt { padding: 8px 14px; }
+.opt small { display: block; font-size: 13.5px; color: var(--muted); line-height: 1.4; margin-top: 2px; }
+.opt[aria-pressed="true"] { border-color: var(--turmeric); background: color-mix(in srgb, var(--turmeric) 14%, var(--raise)); }
+.opt:hover, .opt:focus-visible { border-color: var(--turmeric); outline: none; }
+
+/* End */
+.meter { margin: 14px 0; }
+.meter .row { display: flex; justify-content: space-between; font-variant-numeric: tabular-nums; }
+.meter .row span:last-child { font-family: var(--mono); font-size: 14px; }
+.meter .sub { font-size: 13.5px; color: var(--muted); }
+.meter .track { height: 8px; background: var(--line); border-radius: 4px; margin-top: 6px; overflow: hidden; }
+.meter .fill { height: 100%; background: var(--turmeric); width: 0; transition: width 1s ease; }
+.verdict { font-family: var(--display); font-size: clamp(26px, 5.4vw, 34px); line-height: 1.2; margin: 26px 0 8px; padding: 20px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); text-wrap: balance; }
+ul.plain { padding-left: 20px; margin: 0 0 14px; }
+ul.plain li { margin-bottom: 8px; }
+.srclist p { font-size: 15.5px; margin-bottom: 14px; }
+.srclist .tag { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; color: var(--turmeric); }
+
+@media (max-width: 480px) {
+  body { font-size: 16.5px; }
+  .story { padding: 20px 16px 24px; }
+  .opts { grid-template-columns: 1fr; }
+  .thread-labels { font-size: 9.5px; }
+}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header class="hud">
+    <span class="who" id="hudWho">Given Away</span>
+    <nav>
+      <button class="linkbtn" id="navMethod" type="button">Method</button>
+      <button class="linkbtn" id="navSources" type="button">Sources</button>
+    </nav>
+  </header>
+  <div id="thread" hidden></div>
+  <div class="stage" id="stage"></div>
+  <div class="band" id="band" aria-hidden="true"></div>
+  <main class="story" id="app" aria-live="polite"></main>
+</div>
+
+<script>
+/* =========================================================
+   SOURCES: every historical claim in the game points here.
+   ========================================================= */
+const SOURCES = {
+  sarkar: {
+    cite: "Sarkar 2009",
+    author: "Tanika Sarkar", year: "2009",
+    title: "\"Wicked Widows: Law and Faith in Nineteenth-Century Public Sphere Debates\", in Rebels, Wives, Saints: Designing Selves and Nations in Colonial Times (Ranikhet: Permanent Black), pp. 121-52",
+    note: "Module 6 reading. The discipline of Hindu widowhood, the 1856 Act and its costs, and the argument that the law lost the social battle while unsettling older certainties.",
+    module: "Module 6"
+  },
+  nair: {
+    cite: "Nair 1994",
+    author: "Janaki Nair", year: "1994",
+    title: "\"The Devadasi, Dharma and the State\", Economic and Political Weekly 29:50, pp. 3157-67",
+    note: "Module 6 reading. How the Mysore bureaucracy stripped devadasis of temple roles and land between 1892 and 1909, and how basavi dedication worked among lower castes.",
+    module: "Module 6"
+  },
+  sen: {
+    cite: "Sen 2004",
+    author: "Samita Sen", year: "2004",
+    title: "\"'Without His Consent?': Marriage and Women's Migration in Colonial India\", International Labor and Working-Class History 65, pp. 77-104",
+    note: "Module 6 reading. Women's migration to mills, mines and the Assam tea gardens, and the 1901 Act that made a married woman's labour contract depend on her husband's consent.",
+    module: "Module 6"
+  },
+  chokherbali: {
+    cite: "Tagore 1903; Ghosh 2003",
+    author: "Rabindranath Tagore (novel); Rituparno Ghosh (film)", year: "1903; 2003",
+    title: "Chokher Bali",
+    note: "Module 6 film. A young widow, Binodini, lives in a Calcutta household where her desire and intelligence unsettle everyone around her. Sarkar lists the novel among the great fictions of widows' love.",
+    module: "Module 6"
+  },
+  guha: {
+    cite: "Guha 1987",
+    author: "Ranajit Guha", year: "1987",
+    title: "\"Chandra's Death\", Subaltern Studies V; reprinted in Partha Chatterjee (ed.), The Small Voice of History (2009), pp. 271-303",
+    note: "Module 1 reading. Reconstructs the 1849 death of a lower-caste widow after an abortion arranged by her kin. Sarkar cites it in 'Wicked Widows'.",
+    module: "Module 1"
+  },
+  ambedkar: {
+    cite: "Ambedkar 1916",
+    author: "B.R. Ambedkar", year: "1916",
+    title: "\"Castes in India: Their Mechanism, Genesis and Development\" (paper read at Columbia University; published in Indian Antiquary, 1917)",
+    note: "Argues that sati, enforced widowhood and girl marriage kept the numbers of marriageable men and women in balance so that a caste could stay endogamous."
+  },
+  chakravarti: {
+    cite: "Chakravarti 2003",
+    author: "Uma Chakravarti", year: "2003",
+    title: "Gendering Caste: Through a Feminist Lens (Calcutta: Stree)",
+    note: "Brahmanical patriarchy: control of women's sexuality as the means of keeping caste closed, with women as the 'gateways' of caste."
+  },
+  act1856: {
+    cite: "Act XV of 1856",
+    author: "Legislative Council of India", year: "1856",
+    title: "Hindu Widows' Remarriage Act (Act XV of 1856)",
+    note: "Removed the legal bar on Hindu widow remarriage. Section 2 ended a remarried widow's rights in her deceased husband's property as if she had died. Sarkar notes she also lost custody of children from the first marriage."
+  },
+  vidyasagar: {
+    cite: "Vidyasagar (via Sarkar)",
+    author: "Ishwar Chandra Vidyasagar", year: "1855-56",
+    title: "Campaign and tracts for widow remarriage",
+    note: "Used a verse of the Parasharasamhita to argue that scripture allowed remarriage; organised petitions and funded many of the early weddings himself (Sarkar 2009, pp. 123, 134, 148)."
+  },
+  shinde: {
+    cite: "Shinde 1882",
+    author: "Tarabai Shinde", year: "1882",
+    title: "Stri Purush Tulana (A Comparison of Women and Men)",
+    note: "Marathi tract attacking the double standard applied to women and men. Prompted by the trial of a young Brahmin widow, Vijayalakshmi, for killing her newborn."
+  },
+  ramabai: {
+    cite: "Ramabai 1887",
+    author: "Pandita Ramabai", year: "1887",
+    title: "The High-Caste Hindu Woman (Philadelphia)",
+    note: "Money raised from the book helped found the Sharada Sadan for high-caste widows in Bombay in March 1889. It moved to Pune in 1890, and in the early 1890s conversions at the home cost it many Hindu supporters."
+  },
+  phule: {
+    cite: "Phule 1863",
+    author: "Jyotirao and Savitribai Phule", year: "1863",
+    title: "Home for the prevention of infanticide, Pune",
+    note: "A home where pregnant widows could give birth in safety and secrecy."
+  },
+  rukhmabai: {
+    cite: "Dadaji Bhikaji v. Rukhmabai",
+    author: "Bombay High Court", year: "1884-88",
+    title: "Dadaji Bhikaji v. Rukhmabai (suit for restitution of conjugal rights)",
+    note: "Rukhmabai, married as a child, refused to live with her husband. Pinhey J ruled for her in 1885; the appeal court reversed him; in 1887 she was ordered to go to her husband or face six months' imprisonment; the case was settled in 1888. Behramji Malabari campaigned on her behalf."
+  },
+  aoc1891: {
+    cite: "Age of Consent Act 1891",
+    author: "Imperial Legislative Council", year: "1891",
+    title: "Age of Consent Act (Act X of 1891)",
+    note: "Raised the age of consent to sexual intercourse, within marriage too, from ten to twelve. The bill followed the death of Phulmoni, an eleven-year-old Calcutta wife; her husband was tried in 1890."
+  },
+  sarda: {
+    cite: "Sarda Act 1929",
+    author: "Imperial Legislative Council", year: "1929",
+    title: "Child Marriage Restraint Act (Act XIX of 1929)",
+    note: "Fixed the minimum marriage age at fourteen for girls and eighteen for boys from 1 April 1930. It punished those who arranged such marriages but did not make the marriages void."
+  },
+  sati1829: {
+    cite: "Regulation XVII of 1829",
+    author: "Government of Bengal", year: "1829",
+    title: "Bengal Sati Regulation (Regulation XVII of 1829)",
+    note: "Declared sati illegal and punishable in the Bengal Presidency."
+  },
+  assam1901: {
+    cite: "Act VI of 1901 (via Sen)",
+    author: "Government of India", year: "1901",
+    title: "Assam Labour and Emigration Act (Act VI of 1901)",
+    note: "Made it a penal matter to recruit a married woman without her husband's consent, on the reasoning that marriage was a prior contract over her labour (Sen 2004, p. 99)."
+  }
+};
+
+/* =========================================================
+   STATE
+   ========================================================= */
+const START = {
+  "upper-landed": { H: 60, S: 65, A: 15 },
+  "upper-poor":   { H: 55, S: 35, A: 15 },
+  "lower-landed": { H: 35, S: 50, A: 30 },
+  "lower-poor":   { H: 25, S: 25, A: 35 }
+};
+let s = null;
+function newState(caste, cls) {
+  const m = START[caste + "-" + cls];
+  return { caste, cls, H: m.H, S: m.S, A: m.A, n: 0, path: null, sub: null, scene: 0 };
+}
+const clamp = v => Math.max(0, Math.min(100, v));
+function apply(d) {
+  if (!d) return;
+  for (const k of ["H", "S", "A"]) if (d[k]) s[k] = clamp(s[k] + d[k]);
+}
+const U = () => s.caste === "upper";
+const L = () => s.cls === "landed";
+
+/* =========================================================
+   SCENES
+   Each scene: (state) => { title, year, body[], choices[], history? }
+   Each choice: { label, d:{H,S,A}, set?, out[], voice:{who,line}, history[] }
+   History item: { t: text, src: [keys], pp?: pages }
+   ========================================================= */
+const SCENES = [
+
+/* ---------- 1. THE MATCH ---------- */
+function match() {
+  let body;
+  if (U() && L()) body = [
+    "The astrologer has matched the charts. The boy is fifteen, of your own sub-caste, from a village two days away by bullock cart. Your father has promised gold bangles, a milch cow and a trunk of brass vessels.",
+    "Your mother oils your hair and tells you to stop running in the courtyard. A girl must be given away before her first bleeding, she says. Otherwise the sin is on her father."
+  ];
+  else if (U()) body = [
+    "Your father keeps the village shrine and owns no land. The families with young sons ask for more than the house is worth.",
+    "The match he can afford is a widower of forty-four who needs someone to run his kitchen and give him a son. Your mother says nothing at dinner. Your father says that a Brahmin girl who stays unmarried past nine will not stay a Brahmin girl for long."
+  ];
+  else if (L()) body = [
+    "Your family farms four bighas of its own and rents three more. The groom's father farms beside the river. He looked at your hands and your shoulders before he looked at your face.",
+    "His family will give yours two goats and some silver for you, as is the custom in your caste. Your aunt says you will be strong enough for transplanting by next season."
+  ];
+  else body = [
+    "Your father works another man's fields for a share of the crop, and owes him more every year.",
+    "A family across the canal needs a girl who can carry water, weed and cook. They will take you without asking for anything. Your mother says that is the best thing that could have happened."
+  ];
+  return {
+    title: "The match", year: "1879", age: "You are nine.",
+    body,
+    choices: [
+      {
+        label: "Stand still while they put the vermilion in your parting.",
+        d: { H: 5, A: -5 },
+        out: [
+          "The rites last most of the night. You fall asleep against your aunt before the end.",
+          "In the morning you are a wife. You go back to your parents' house to wait until you are old enough to be sent for."
+        ],
+        voice: U()
+          ? { who: "Your mother", line: "Good. A girl who does not make a fuss brings luck to two houses." }
+          : { who: "Your aunt", line: "There. Now you belong somewhere." }
+      },
+      {
+        label: "Refuse. Hide in the cowshed until they find you.",
+        d: { H: U() ? -10 : -6 },
+        out: [
+          "Your uncle finds you before the lamps are lit and carries you to the wedding under his arm. Your crying gets lost among the " + (U() ? "conch shells" : "drums") + ".",
+          "The marriage is complete before you stop. You go back to your parents' house to wait until you are sent for."
+        ],
+        voice: U()
+          ? { who: "Your father", line: "Who asked you? A daughter is given. Nobody asks the gift." }
+          : { who: "Your grandmother", line: "Cry here, then. Over there you won't have time." }
+      }
+    ],
+    history: [
+      { t: "Child marriage was common across castes. Sarkar notes that some widows who remarried under the 1856 Act had been widowed at three or four, and that the 1891 census counted widows under ten as about 6 per cent of all married girls in Bengal.", src: ["sarkar"], pp: "pp. 136-37" },
+      { t: "Ambedkar argued that girl marriage, sati and enforced widowhood were devices for keeping a caste endogamous by controlling whom its women could marry.", src: ["ambedkar"] }
+    ]
+  };
+},
+
+/* ---------- 2. YOUR HUSBAND'S HOUSE ---------- */
+function house() {
+  if (U()) {
+    const body = [
+      "Your husband's family has sent word. The cart comes for you next week. Your mother spends the days telling you what will be expected.",
+      L()
+        ? "Your mother-in-law will weigh the dowry gold in her palm and tell the neighbours it is lighter than promised. Your mother says to expect this and to say nothing."
+        : "Your husband's first wife died in childbirth. Her two sons are nearly your age. Your mother says not to expect them to call you mother.",
+      "You may not enter the kitchen while you bleed. You will eat after the men, from what is left. You will cover your face before your father-in-law and your husband's elder brother and speak to them through a child.",
+      "In the evenings your brother reads the newspaper aloud. A woman in Bombay has refused to live with the man she was married to as a child. He has taken her to court."
+    ];
+    return {
+      title: "Your husband's house", year: "1885", age: "You are fifteen.",
+      body,
+      choices: [
+        {
+          label: "Go.",
+          d: { H: 5, A: -5 },
+          out: [
+            "Everything your mother described is true, and there is more she left out. Your husband comes to the room at night. In the day he does not look at you in front of his mother.",
+            "In 1887 you have a son. After that your mother-in-law lets you sit at the edge of the women on festival days."
+          ],
+          voice: { who: "Your mother-in-law", line: "In my time a bride did not lift her eyes until her second child." }
+        },
+        {
+          label: "Refuse to go, like the woman in the newspapers.",
+          d: { H: -15, S: -5 },
+          out: [
+            "For a week your father does not speak to you. Then a letter arrives from your husband's family. If you do not come they will go to court, and everyone will read your father's name.",
+            "Your father takes you there himself. In Bombay that year a judge rules for the woman in the newspapers. The appeal court overturns him the year after. By then you are pregnant, and your mother-in-law reminds you every day what you nearly cost them. You have a son in 1887."
+          ],
+          voice: { who: "Your father-in-law", line: "A wife who has to be fetched is a disgrace. Still, she is ours." }
+        }
+      ],
+      history: [
+        { t: "Rukhmabai refused to live with the husband she had been married to as a child. He sued in the Bombay High Court in 1884. Pinhey J ruled for her in 1885; the appeal court reversed him, and in 1887 she was ordered to go to her husband or face six months in prison. The case ended in a settlement in 1888.", src: ["rukhmabai"] },
+        { t: "In Calcutta an eleven-year-old wife, Phulmoni, died after intercourse with her adult husband, who was tried in 1890. The Age of Consent Act 1891 then raised the age of consent from ten to twelve, against fierce orthodox protest.", src: ["aoc1891"] }
+      ]
+    };
+  }
+  const body = [
+    "They have sent for you.",
+    "In your husband's house you are up before light to sweep the yard, draw water and grind the day's grain. In the season you transplant rice beside your mother-in-law until your back locks. Any wages go into your husband's hand.",
+    L()
+      ? "Your husband's family has land, so they need hands more than mouths. You are a pair of hands."
+      : "The landlord's munshi stands at the edge of the field and watches the women bend. Nobody says anything about it.",
+    "At the well, a woman from two villages away talks about the tea gardens in Assam. Five rupees a month, she says. Your own money. Silver on your wrists, and no husband shouting at you."
+  ];
+  return {
+    title: "Your husband's house", year: "1885", age: "You are fifteen.",
+    body,
+    choices: [
+      {
+        label: "Stay and work.",
+        d: { H: 3, S: -5, A: -5 },
+        out: [
+          "You stay. Your husband hits you less once you are pregnant.",
+          "Your son is born in 1887, in the season of the second weeding. You are back in the field in ten days."
+        ],
+        voice: { who: "Your mother-in-law", line: "Work keeps a woman out of trouble." }
+      },
+      {
+        label: "Go with the woman to the recruiters' depot.",
+        d: { H: -15, S: -5, A: -5 },
+        out: [
+          "She takes you by night to a depot in the district town with four other girls. The doors are kept shut. On the third day your husband's brother finds the depot, and the police bring you home.",
+          "\"You were unlucky,\" the woman says as they lead you out. \"Most husbands never find anyone.\" At home your husband beats you in front of the household, and your mother-in-law takes your silver anklets. Your son is born in 1887."
+        ],
+        voice: { who: "Your husband's brother", line: "Next time we won't come looking. We'll tell the panchayat you died." }
+      }
+    ],
+    history: [
+      { t: "Assam recruiters often targeted unhappy married women. After 1882, 'free' emigration needed no registration, and families seldom traced the women: one search in 1883 found three out of fifty-eight.", src: ["sen"], pp: "pp. 91, 95-96" },
+      { t: "The Indian Penal Code of 1860 created a chapter of 'offences against marriage', including enticing away a married woman. Officials argued over whether recruiting a wife was such an offence.", src: ["sen"], pp: "pp. 94-95" }
+    ]
+  };
+},
+
+/* ---------- 3. THE DEATH ---------- */
+function death() {
+  if (U()) {
+    const body = [
+      "Your son is two. Your husband comes home from the town with a fever on a Tuesday and is dead by Friday.",
+      "The women of the house break your glass bangles on the floor and wipe the vermilion from your parting. Nobody mentions the pyre for you. The British banned that sixty years ago, the year your grandmother was born. Your mother-in-law has already laid a white sari on your bed.",
+      L()
+        ? "Your husband's share of the family land is now yours to live off, though you may not sell it. His elder brother is already working out how to manage it for you."
+        : "There is no land. There is your husband's house, his elder brother, and his brother's wife, who has three children and no use for you.",
+      "A teacher in the town, a friend of the reformers, has let it be known that he will marry a widow. And there is talk of a home in Bombay, opened this year by a Brahmin woman, where widows are taught to read."
+    ];
+    return {
+      title: "The death", year: "1889", age: "You are nineteen.",
+      body,
+      choices: [
+        {
+          label: "Marry again.",
+          set: "remarry",
+          d: { H: -35, S: L() ? -30 : -20, A: 15 },
+          out: [
+            "The wedding happens in a reformer's house with the doors bolted. Your father does not come. Your mother sends nothing.",
+            "Under the law that made this marriage possible, everything you held from your first husband is gone, as though you had died. Your son stays with his father's family."
+          ],
+          voice: { who: "Your mother, in a message carried by a servant", line: "Your father cannot bathe at the ghat. The men stop talking when he comes. Do not write." },
+          history: [
+            { t: "Section 2 of the Hindu Widows' Remarriage Act ended a remarried widow's rights in her first husband's property as if she had died. Sarkar notes she also lost custody of her children, and that couples faced ostracism, disinheritance and violence.", src: ["act1856", "sarkar"], pp: "pp. 122-23, 146" },
+            { t: "Opponents of the bill gathered over 55,000 signatures against about 5,000 for it. By the early 1860s Bengal had seen roughly sixty remarriages, most of them in upper-caste families.", src: ["sarkar", "vidyasagar"], pp: "pp. 122, 124" }
+          ]
+        },
+        {
+          label: "Stay in this house as a widow.",
+          set: "widow",
+          d: { H: 10, S: -10, A: -20 },
+          out: [
+            "On the eleventh day the barber shaves your head. You eat once a day: plain rice, no fish, none of the lentils that might heat the blood. Twice a month, on Ekadashi, you take no food and no water.",
+            "You may not go to weddings. When a cousin's wife sees you first thing in the morning, she turns back into the house to start the day again."
+          ],
+          voice: { who: "Your mother-in-law", line: "Your luck ate my son. The least you can do is keep the fasts." },
+          history: [
+            { t: "Bengali custom made the twice-monthly waterless Ekadashi fast compulsory even for child widows and the dying; not even medicine was allowed. Widows wore white without jewellery, were denied fish and certain pulses, and were kept out of women's rites.", src: ["sarkar"], pp: "pp. 135, 137" },
+            { t: "The ban on remarriage was absolute for upper castes. Ambedkar and Chakravarti both read it as control of women's sexuality in the service of caste purity.", src: ["ambedkar", "chakravarti"] }
+          ]
+        },
+        {
+          label: "Run away to the widows' home in Bombay.",
+          set: "ranaway",
+          d: { H: -40, S: -20, A: 20 },
+          out: [
+            L()
+              ? "You sell two of your bangles to a cloth merchant's wife and take the train."
+              : "You have nothing to sell. You walk to the railway station and beg the fare from strangers.",
+            "You leave your son asleep beside his grandmother. Your husband's family tells the village you died of the same fever. In a sense they are right."
+          ],
+          voice: { who: "A neighbour", line: "First she ate the husband, then she ran. That kind always runs." },
+          history: [
+            { t: "Pandita Ramabai opened the Sharada Sadan for high-caste widows in Bombay in March 1889 and moved it to Pune in 1890. Her book The High-Caste Hindu Woman had raised money for it in America.", src: ["ramabai"] },
+            { t: "In 1863 Jyotirao and Savitribai Phule had opened a home in Pune where pregnant widows could give birth in safety.", src: ["phule"] }
+          ]
+        }
+      ],
+      history: [
+        { t: "Sati had been illegal in the Bengal Presidency since Regulation XVII of 1829.", src: ["sati1829"] }
+      ]
+    };
+  }
+  const body = [
+    "Your son is two. Your husband is crushed under a cartwheel on the landlord's threshing floor and lives three days.",
+    "Your caste has always let a widow take a second husband with a short rite and a meal for the elders. But your father-in-law has started wearing a sacred thread and talking about how the better families live. In better families, widows do not remarry.",
+    L()
+      ? "Your husband's share of the land is a question nobody asks aloud yet."
+      : "There is no land. There is your labour, and your son, who will be labour in a few years.",
+    "The woman from the well is back in the district, recruiting for Assam."
+  ];
+  return {
+    title: "The death", year: "1889", age: "You are nineteen.",
+    body,
+    choices: [
+      {
+        label: "Marry again, by the rite your caste allows.",
+        set: "sanga",
+        d: { H: -5, S: L() ? -20 : -15, A: 10 },
+        out: [
+          "The panchayat agrees. A widower from the next village takes you with a short rite, a new cloth and a meal for the elders. Upper-caste women at the tank call it a cowshed wedding.",
+          "Your first husband's family keeps your son. He belongs to their line, they say." + (L() ? " They keep your husband's land as well." : "")
+        ],
+        voice: { who: "Your first mother-in-law", line: "Take your new man. The boy stays. Blood stays where it was planted." },
+        history: [
+          { t: "Many lower castes let widows remarry and keep their first husband's property. The 1856 Act, framed with upper-caste widows in mind, took that property away from them too.", src: ["sarkar", "act1856"], pp: "p. 146" },
+          { t: "Sen argues that colonial courts pressed upper-caste ideas of lifelong female monogamy on lower castes and Adivasis, eroding their customary rights to divorce and remarry.", src: ["sen"], pp: "pp. 94, 100" }
+        ]
+      },
+      {
+        label: "Stay a widow, as your father-in-law wants.",
+        set: "respectable",
+        d: { H: 10, S: -10, A: -15 },
+        out: [
+          "You stay. You work the same fields for no wage of your own.",
+          "Your father-in-law tells the caste council that his widowed daughter-in-law keeps the fasts like a Brahmin widow. They are impressed. You are hungry."
+        ],
+        voice: { who: "Your father-in-law", line: "Now let them say we live like animals." },
+        history: [
+          { t: "Upper-caste widowhood carried prestige, so castes claiming a higher status adopted it. In 1911 the women's magazine of an upwardly mobile Shudra caste in Bengal praised the self-denial of chaste widows. Risley found poorer low castes taking the ban seriously too.", src: ["sarkar"], pp: "pp. 132-33, n. 34" }
+        ]
+      },
+      {
+        label: "Go with the recruiter to the Assam tea gardens.",
+        set: "migrant",
+        d: { H: -20, S: -5, A: 10 },
+        out: [
+          "This time nobody follows. You leave your son with your mother.",
+          "At the depot a clerk reads out a contract too fast to follow, and you press your thumb on it. You travel upriver by steamer for days."
+        ],
+        voice: { who: "Your mother", line: "Go, then. I'll say you died of grief with him." },
+        history: [
+          { t: "Planters wanted women for leaf plucking and to bear the next generation of workers. Under the Workmen's Breach of Contract Act 1859, leaving a contract was a crime, and planters could arrest 'absconders' themselves.", src: ["sen"], pp: "pp. 89-90" },
+          { t: "As a widow she could still sign. From 1901 a married woman could not lawfully be recruited for Assam without her husband's consent, because marriage was treated as a prior contract over her labour.", src: ["assam1901", "sen"], pp: "p. 99" }
+        ]
+      }
+    ]
+  };
+},
+
+/* ---------- 4. AFTERMATH ---------- */
+function after() {
+  const p = s.path;
+
+  if (p === "remarry") return {
+    title: "After", year: "1893", age: "You are twenty-three.",
+    body: [
+      "You live in two rented rooms in the town. Your husband's father has cut him off, and he copies documents for a pleader to pay the rent. Some of the reformers who came to your wedding have stopped inviting you.",
+      "You have a daughter. Your son is six. You have seen him once, across the road outside his grandfather's house. He did not know you."
+    ],
+    choices: [
+      {
+        label: "Go to court for the right to see your son.",
+        d: { S: -15, H: -5 },
+        out: [
+          "The pleader takes your last bangle as his fee. The judge reads out Section 2, then the sections on guardianship. Your son's grandfather is his guardian now. The court orders nothing.",
+          "Your husband does not speak to you for a month. The fee was the rent."
+        ],
+        voice: { who: "The pleader", line: "Madam, the law let you remarry. It never promised you anything else." }
+      },
+      {
+        label: "Stay away. Protect the household you have.",
+        d: { S: 5, A: -10 },
+        out: [
+          "You stay away. Twice your husband is passed over for a clerk's post because his wife is \"that widow\".",
+          "You keep the rooms clean and the door shut. On your son's birthday you cook his favourite sweet and give it to the neighbour's child."
+        ],
+        voice: { who: "Your husband", line: "We were brave once. That is enough bravery for one family." }
+      }
+    ],
+    history: [
+      { t: "Several early remarriages broke up because the husband was disinherited. One fairly wealthy upper-caste man who eloped with a widow had to work as a domestic servant for some years.", src: ["sarkar"], pp: "p. 123" },
+      { t: "Sarkar points out that the Act made an adult widow's own consent enough to validate her remarriage, a quiet recognition of her as a self-possessed legal person. It said nothing about how she would live.", src: ["sarkar"], pp: "p. 140" }
+    ]
+  };
+
+  if (p === "widow") return {
+    title: "After", year: "1895", age: "You are twenty-five.",
+    body: [
+      "You have kept every fast for six years. " + (L()
+        ? "Your husband's elder brother manages your share of the land, and you eat what he allows."
+        : "You sleep in the room beside the cowshed and cook for the household without pay."),
+      "When his wife goes to her mother's, your husband's elder brother has begun coming to your room at night.",
+      "A young cousin of the family lodges in the outer rooms while he studies in Calcutta. He leaves novels on your window ledge. This week there was a letter folded inside one."
+    ],
+    choices: [
+      {
+        label: "Say nothing. Keep the fasts.",
+        sub: "home",
+        d: { A: -10, S: -5 },
+        out: [
+          "Nothing happens that anyone will say aloud.",
+          "In the third year your bleeding stops. Your mother-in-law sends for a woman from the lower quarter, who brings a paste of roots. You bleed for four days and live. That winter your brother-in-law brings home a second wife."
+        ],
+        voice: { who: "Your mother-in-law", line: "You are thin. Good. A widow should look like one." },
+        history: [
+          { t: "Guha's \"Chandra's Death\" (Module 1) reconstructs the case of a lower-caste widow who died in 1849 after an abortion arranged by her kin. Sarkar adds that secret abortions and infanticides were very common among widows, while male guardians who exploited them faced no real stigma.", src: ["guha", "sarkar"], pp: "pp. 138, 143" }
+        ]
+      },
+      {
+        label: "Tell your mother-in-law about her elder son.",
+        sub: "kashi",
+        d: { H: -20, S: -15, A: -5 },
+        out: [
+          "Your mother-in-law slaps you. A widow who speaks of such things is already ruined, she says.",
+          "Within the month you are put on a train to Kashi with a widowed aunt and an allowance that stops after the second year."
+        ],
+        voice: { who: "Your mother-in-law", line: "My son is a householder. You are nothing. Whom do you think they will believe?" },
+        history: [
+          { t: "Tarabai Shinde's Stri Purush Tulana (1882) attacked exactly this double standard: widows punished for what men did to them, men excused.", src: ["shinde"] },
+          { t: "Until 1873 any hint of 'unchastity' could end a widow's right to her husband's property; a judgement that year reversed this, though families still cheated widows of their share.", src: ["sarkar"], pp: "p. 144" }
+        ]
+      },
+      {
+        label: "Answer the letter.",
+        sub: "kashi",
+        d: { H: -25, S: -20, A: 5 },
+        out: [
+          "You write back. Three letters, then four. Then his mother finds them.",
+          "He goes back to Calcutta to sit his examination. You are sent to Kashi before the end of the week."
+        ],
+        voice: { who: "His mother", line: "She read novels. I always said no good comes of a widow who can read." },
+        history: [
+          { t: "In Tagore's Chokher Bali (1903), the widow Binodini's desire and intelligence upset an entire household; in the novel she ends by leaving for Kashi. Ghosh's 2003 film ends differently.", src: ["chokherbali"] },
+          { t: "Sarkar argues that widows offered almost the only route to self-chosen romance in a world of infant marriage, and that such novels moved widows' love out of scandal and into serious fiction.", src: ["sarkar"], pp: "pp. 138, 142" }
+        ]
+      }
+    ]
+  };
+
+  if (p === "ranaway") return {
+    title: "After", year: "1895", age: "You are twenty-five.",
+    body: [
+      "You read Marathi now, and some English. The home has moved to Pune. You teach the younger girls their letters. Your family has answered none of your letters.",
+      "Some girls in the home have become Christians. The newspapers call the home a trap for Hindu widows, and some of its Hindu patrons have resigned.",
+      "Your brother comes to the gate. He says your mother is dying and asking for you."
+    ],
+    choices: [
+      {
+        label: "Stay and finish your teacher's training.",
+        sub: "teacher",
+        d: { A: 15, S: 10, H: -10 },
+        out: [
+          "You stay. Your mother dies in the spring. Nobody tells you until the rites are over.",
+          "In 1897 you take a post at a girls' school in Bombay. In the street, people who know your story look past you."
+        ],
+        voice: { who: "Your brother", line: "Stay with your Christians, then. You have no mother." }
+      },
+      {
+        label: "Go home with your brother.",
+        sub: "returned",
+        d: { H: -10, A: -20 },
+        out: [
+          "Your mother is not dying. She is well, and she does not come out to see you.",
+          "You are given a room at the back of your father's house and told not to show your face to visitors. After a year you stop writing to the home."
+        ],
+        voice: { who: "Your father", line: "You may eat here. Do not ask for anything more." }
+      }
+    ],
+    history: [
+      { t: "A controversy over conversions at the Sharada Sadan in the early 1890s led several Hindu members of its advisory committee to resign.", src: ["ramabai"] },
+      { t: "The alternative was often worse: reformers and officials were embarrassed to find a disproportionate number of Brahmin widows in Calcutta's brothels.", src: ["sarkar"], pp: "p. 144" }
+    ]
+  };
+
+  if (p === "sanga") return {
+    title: "After", year: "1897", age: "You are twenty-seven.",
+    body: L() ? [
+      "You have two daughters by your second husband. Your son, now ten, works his grandfather's fields, on land that was partly your first husband's.",
+      "A pleader at the market says some High Courts have let remarried widows keep property under caste custom, and some have not."
+    ] : [
+      "You have two daughters by your second husband. Your son, now ten, herds his grandfather's goats.",
+      "You see him at the weekly market. He calls you aunty, because that is what they told him."
+    ],
+    choices: L() ? [
+      {
+        label: "Sue for your first husband's land on the strength of caste custom.",
+        d: { S: -15, A: 5 },
+        out: [
+          "The case takes six years. Your second husband sells a buffalo to pay for it.",
+          "The court finds that the Act ended your rights and that your caste's custom is not proved. You go home poorer."
+        ],
+        voice: { who: "Your second husband", line: "You married me. Stop living in the other house." }
+      },
+      {
+        label: "Let it go.",
+        d: { A: -5 },
+        out: [
+          "You let it go. Your first husband's brother ploughs that land.",
+          "When you pass it on the way to market, you do not look."
+        ],
+        voice: { who: "Your first mother-in-law", line: "Sensible. A woman has to choose which hearth is hers." }
+      }
+    ] : [
+      {
+        label: "Ask the caste council to let your son live with you.",
+        d: { S: -10, H: -5 },
+        out: [
+          "The council hears you for ten minutes. A boy belongs to his father's line.",
+          "They fine your second husband a rupee for letting you raise it."
+        ],
+        voice: { who: "Your second husband", line: "A rupee. For a boy who calls you aunty." }
+      },
+      {
+        label: "Let it go.",
+        d: { A: -5 },
+        out: [
+          "You let him go.",
+          "At the market you buy him a sweet. He takes it and runs."
+        ],
+        voice: { who: "Your first mother-in-law", line: "Sensible. A woman has to choose which hearth is hers." }
+      }
+    ],
+    history: [
+      { t: "After 1856, remarried widows from castes that had always allowed remarriage went to court claiming their first husband's property under caste custom. Different High Courts answered differently.", src: ["sarkar"], pp: "p. 146" },
+      { t: "Sen shows colonial legislation, despite its stated respect for custom, extending elite marriage norms at the cost of labouring women's rights of divorce and remarriage.", src: ["sen"], pp: "p. 100" }
+    ]
+  };
+
+  if (p === "respectable") return {
+    title: "After", year: "1897", age: "You are twenty-seven.",
+    body: [
+      "You have never held a coin of your own. Your father-in-law's efforts have worked: the family now marries into a better branch of the caste. Your work has not changed.",
+      "In the transplanting season, women from the poorer villages go east in groups to work for wages. They come back with cash knotted into the ends of their saris."
+    ],
+    choices: [
+      {
+        label: "Stay, and work for the family without pay.",
+        d: { A: -10, S: -5 },
+        out: [
+          "You stay. When your son is married you cook for the wedding feast for three days.",
+          "For the rites you sit at the back, because in this family a widow at the front is now bad luck."
+        ],
+        voice: { who: "Your father-in-law", line: "A respectable family has a respectable widow. You are our proof." }
+      },
+      {
+        label: "Go east with the transplanting gangs for the season.",
+        d: { S: 10, H: -15, A: 5 },
+        out: [
+          "You earn more in six weeks than you have held in your life.",
+          "When you come back, the women at the well ask where you slept. Your father-in-law pays a fine to the caste council and takes your money to cover it."
+        ],
+        voice: { who: "A caste elder", line: "Six weeks among strangers, and a widow. He is lucky we only fined him." }
+      }
+    ],
+    history: [
+      { t: "Poor women often migrated seasonally for agricultural wage work. Sen shows this usually served the household's survival strategy and left family authority intact.", src: ["sen"], pp: "p. 81" },
+      { t: "From the 1860s, the unpaid part of women's work rose steeply while the paid part fell.", src: ["sen"], pp: "p. 80" }
+    ]
+  };
+
+  /* migrant */
+  return {
+    title: "After", year: "1895", age: "You are twenty-five.",
+    body: [
+      "Six years on the garden. You pluck two leaves and a bud, all day, with the basket strapped to your forehead. The contract has been renewed twice, both times with your thumb.",
+      "The manager wants women to take husbands in the lines, because children mean a settled workforce. A man from your own district has asked for you.",
+      "Women who run are hunted back. Some get as far as the jute mills of Calcutta, where nobody asks whose wife you are."
+    ],
+    choices: [
+      {
+        label: "Take the man from your district and stay.",
+        sub: "garden",
+        d: { S: 5, A: -10 },
+        out: [
+          "You marry in the lines. The manager pays a bonus for each live birth. You have two daughters.",
+          "When the elder is eight she starts carrying leaves beside you."
+        ],
+        voice: { who: "The sardar", line: "Good. A woman with children doesn't run." },
+        history: [
+          { t: "Planters forced 'single' recruits into 'depot marriages', paid bonuses for live births, and set mothers and children to plucking, which was cheap and counted as women's work.", src: ["sen"], pp: "p. 90" }
+        ]
+      },
+      {
+        label: "Run for Calcutta.",
+        sub: "mill",
+        d: { A: 10, H: -10, S: -5 },
+        out: [
+          "You run on a night with no moon. A cart driver takes your last rupee to say nothing.",
+          "In Calcutta you find work in the preparing department of a jute mill. You live with another woman from the gardens, and later with a man from Bihar who has a wife in his village. You have a daughter."
+        ],
+        voice: { who: "A neighbour in the mill lines", line: "Nobody here asks questions. Nobody here helps, either." },
+        history: [
+          { t: "Women in the Calcutta mills were mostly widows, deserted or childless wives, and women escaping husbands. A 1923 government report described nearly all Bengali women in the mills as 'degraded women or prostitutes', and the label stuck for decades.", src: ["sen"], pp: "pp. 83-84" }
+        ]
+      }
+    ]
+  };
+},
+
+/* ---------- 5. OLD AGE ---------- */
+function old() {
+  const p = s.path, sub = s.sub;
+  const silentVoice = { who: "Your son", line: "The law is for the cities, Ma. Here we know our own girls." };
+  const speakVoice = { who: "Your daughter-in-law", line: "A widow telling us how to marry our daughter. This really is the Kali Yuga." };
+  const sardaHist = [
+    { t: "The Sarda Act of 1929 set the minimum marriage age at fourteen for girls and eighteen for boys from 1 April 1930. Many families hurried child weddings through before that date. Marriages made in breach of the Act remained valid.", src: ["sarda"] }
+  ];
+  const marriageChoices = (silentOut, speakOut, sv, kv) => [
+    { label: "Say nothing. It is not your house.", d: { H: 5, A: -5 }, out: silentOut, voice: sv || silentVoice },
+    { label: "Speak against it.", d: { H: -10 }, out: speakOut, voice: kv || speakVoice }
+  ];
+
+  /* lower-caste, poor, still in the village: basavi dedication */
+  if ((p === "sanga" || p === "respectable") && !L()) return {
+    title: "Old age", year: "1929", age: "You are fifty-nine.",
+    body: [
+      "Your daughter's husband has no son. The temple priest says a girl dedicated to the goddess can stay in her father's house, inherit his field and perform his funeral rites, as a son would.",
+      "The girl is eight. Someone in the town says the government calls this an offence now."
+    ],
+    choices: marriageChoices(
+      ["They tie the beads at the temple at the full moon. She will never marry.", "In a few years a man of the landlord's caste comes to an arrangement with her father."],
+      ["You say it at the temple, in front of the priest. He says the goddess does not read the Penal Code.", "The dedication happens at the full moon, as planned."],
+      { who: "Your son-in-law", line: "Now the field stays in my line." },
+      { who: "The priest", line: "The goddess was here before the courts, and she will be here after." }
+    ),
+    history: [
+      { t: "Among some lower castes in Mysore, a sonless family could dedicate a daughter as a basavi, an 'honorary son' who inherited her father's property. Dedicating a girl under eighteen was an offence under s. 372 IPC, but families felt religion allowed it.", src: ["nair"], pp: "p. 3161" },
+      { t: "Mysore had ended devadasi service in its temples by government order in 1909. Muthulakshmi Reddy moved a bill in Madras in 1929 to end dedication; it became law only in 1947.", src: ["nair"], pp: "pp. 3158, 3163" }
+    ]
+  };
+
+  if (p === "widow" && sub === "kashi") return {
+    title: "Old age", year: "1929", age: "You are fifty-nine.",
+    body: [
+      "You have lived in Kashi for thirty-four years, in a house of widows near the river. You sing at the temple in the mornings for a handful of rice.",
+      "A letter comes from your son, the first in years. The Assembly has passed a law: girls must be fourteen to marry, from April. So his daughter, who is nine, will be married in February."
+    ],
+    choices: marriageChoices(
+      ["You do not write back. The wedding is held in the second week of February.", "There are a great many weddings that month. The priests are busy. Families all over the district are racing the new law."],
+      ["You ask a pilgrim to write your answer for you, and send it.", "Your son does not reply. The wedding is held in the second week of February, like the others."],
+      { who: "Your son, in the letter", line: "Bless her, Ma. That is all we ask of you." },
+      { who: "Your son's wife, in a note added at the bottom of his next letter", line: "We have not forgotten why you were sent away." }
+    ),
+    history: sardaHist
+  };
+
+  if (p === "widow") return {
+    title: "Old age", year: "1929", age: "You are fifty-nine.",
+    body: [
+      "Your son is the head of the house now. His daughter is nine. The Assembly has passed a law that girls must be fourteen to marry, and it comes into force in April.",
+      "The family is going to marry her in February."
+    ],
+    choices: marriageChoices(
+      ["You say nothing. The wedding is held in the second week of February.", "There are a great many weddings that month. The priests are busy. Families all over the district are racing the new law."],
+      ["You say it in the courtyard in front of everyone. Your son listens politely.", "The wedding is held in February, like the others. Afterwards the women of the house stop telling you things."]
+    ),
+    history: sardaHist
+  };
+
+  if (p === "remarry") return {
+    title: "Old age", year: "1929", age: "You are fifty-nine.",
+    body: [
+      "Your daughter married into a family that never quite forgave her mother. Her daughter is nine.",
+      "The new law will forbid marrying a girl under fourteen from April. Her husband's family has fixed a date in February."
+    ],
+    choices: marriageChoices(
+      ["You say nothing. The wedding is held in the second week of February.", "There are a great many weddings that month. Families all over the province are racing the new law."],
+      ["You go to their house and say it. Your daughter's mother-in-law hears you out at the door and does not ask you in.", "\"A remarried widow lecturing us on marriage,\" she tells the neighbours. The wedding is held in February."],
+      { who: "Your daughter", line: "Please, Ma. It is hard enough for me in that house already." },
+      { who: "Your daughter's mother-in-law", line: "You chose your own husband once. Leave the rest of us to do it properly." }
+    ),
+    history: sardaHist
+  };
+
+  if (p === "ranaway" && sub === "teacher") return {
+    title: "Old age", year: "1929", age: "You are fifty-nine.",
+    body: [
+      "You have taught for thirty-two years. Some of your old pupils are teachers now.",
+      "A nine-year-old in your class stops coming. Her family is hurrying her wedding through before the new law comes into force in April."
+    ],
+    choices: marriageChoices(
+      ["You say nothing. Her place on the bench stays empty until a new girl fills it.", "There are a great many weddings that February. Families all over the city are racing the new law."],
+      ["You go to the house. The girl's grandmother receives you at the door and does not ask you in.", "Everyone in the lane knows you as the widow who ran from her own family. The wedding is held in February."],
+      { who: "The headmistress", line: "We cannot be seen to interfere. The school depends on their goodwill." },
+      { who: "The girl's grandmother", line: "Teach her letters if you like. Do not teach her your life." }
+    ),
+    history: sardaHist
+  };
+
+  if (p === "ranaway") return {
+    title: "Old age", year: "1929", age: "You are fifty-nine.",
+    body: [
+      "You live in the back room of your brother's house now. His granddaughter is nine. You taught her to read in secret, two years ago.",
+      "The new law forbids marrying a girl under fourteen from April. The family has fixed a date in February."
+    ],
+    choices: marriageChoices(
+      ["You say nothing. The wedding is held in the second week of February.", "There are a great many weddings that month. Families all over the district are racing the new law."],
+      ["You say it at dinner. Your brother puts down his food and leaves the room.", "The wedding is held in February. The girl is told not to visit your room any more."],
+      { who: "Your brother", line: "We took you back. Do not make us regret it." },
+      { who: "Your brother's wife", line: "She ran off to the Christians once. Now she wants to teach our girl the same." }
+    ),
+    history: sardaHist
+  };
+
+  if (p === "sanga" || p === "respectable") return {
+    title: "Old age", year: "1929", age: "You are fifty-nine.",
+    body: [
+      p === "sanga"
+        ? "Your elder daughter's girl is nine. Her father's family has found a match."
+        : "Your son's daughter is nine. The family has found a match in a better branch of the caste.",
+      "A man from the town says a new law will forbid marrying girls under fourteen from April. The wedding has been fixed for February."
+    ],
+    choices: marriageChoices(
+      ["You say nothing. The wedding is held in the second week of February.", "There are a great many weddings that month. Families all over the district are racing the new law."],
+      ["You say it in front of everyone. They listen politely.", "The wedding is held in February, like the others. Afterwards the women of the house stop telling you things."]
+    ),
+    history: sardaHist
+  };
+
+  /* migrant: garden or mill */
+  return {
+    title: "Old age", year: "1929", age: "You are fifty-nine.",
+    body: sub === "garden" ? [
+      "Your elder daughter's girl is twelve. She plucks in the same rows you did.",
+      "The sardar has started noticing her. Her mother wants her married quickly, before anything happens and before the new law forbids marrying girls under fourteen in April."
+    ] : [
+      "Your daughter works in the same mill. Her girl is twelve.",
+      "The jobber has started noticing her. Her mother wants her married quickly, before anything happens and before the new law forbids marrying girls under fourteen in April."
+    ],
+    choices: marriageChoices(
+      ["You say nothing. She is married in February to a man of twenty-six.", "It is the only protection anyone can think of."],
+      ["You tell your daughter to wait. Your daughter asks what waiting did for you.", "The girl is married in February to a man of twenty-six."],
+      { who: "Your daughter", line: "A husband is a wall. A thin one, but a wall." },
+      { who: "Your daughter", line: "You ran from a husband, and look where it brought us." }
+    ),
+    history: sardaHist.concat([
+      { t: "Sen argues that for many women plantation and mill work was perhaps the only escape from oppressive families, even though it brought new forms of exploitation.", src: ["sen"], pp: "p. 100" }
+    ])
+  };
+}
+];
+
+/* =========================================================
+   EPILOGUES AND PATHS NOT TAKEN
+   ========================================================= */
+function epilogue() {
+  const p = s.path, sub = s.sub;
+  if (p === "widow" && sub === "kashi") return "She died in Kashi in 1931. Women from the widows' house carried her to the burning ghat. Her son heard two months later.";
+  if (p === "widow") return "She died in 1934, in the room by the kitchen. Her son lit the pyre and fed Brahmins in her name. The family remembered her as a good widow. Little else about her was kept.";
+  if (p === "remarry") return "She died in 1936 in the rooms her husband had by then bought. Her daughter's husband lit the pyre. Her first son did not come. For most of his life he had been told his mother died of fever in 1889.";
+  if (p === "ranaway" && sub === "teacher") return "She died in 1938. The school closed for a day. In her first husband's village she had been dead for forty-nine years.";
+  if (p === "ranaway") return "She died in 1933 in the back room of her brother's house. The girls she once taught to read in Pune never learned what became of her.";
+  if (p === "sanga") return L()
+    ? "She died in 1935 in her second husband's house, among her daughters. Her first son came to the cremation and stood at the back. Neither of them found anything to say."
+    : "She died in 1935 in her second husband's house. Her first son was told and came the next day, after the pyre had burnt down.";
+  if (p === "respectable") return "She died in 1932 in the house she had worked in for forty-seven years. By then the family's standing in the caste was secure. A widow who kept the rules was part of how they had earned it.";
+  if (sub === "garden") return "She died on the garden in 1930, still under contract in the register. Her granddaughter took her place on the plucking roll the following week.";
+  return "She died in the mill lines in 1931. The man she had lived with went back to his village and his wife years before. The women from her room collected money for the cremation.";
+}
+function notTaken() {
+  const all = U() ? {
+    remarry: "Remarrying would have cost her property, her son and her family, under a law passed to help her.",
+    widow: "Staying a widow would have meant fasting for life in a house where the men could do as they liked with her.",
+    ranaway: "Running would have cost her son and her family."
+  } : {
+    sanga: "Remarrying, as her caste always had, would have cost her son and any land, under a law written for other women.",
+    respectable: "Staying a widow would have cost her wages and her rest, so that the family could rise.",
+    migrant: "Leaving would have cost her son and her home. The contract she signed was enforced by law, for the planter."
+  };
+  return Object.keys(all).filter(k => k !== s.path).map(k => all[k]);
+}
+
+/* =========================================================
+   PAINTING
+   The figure is faceless and has the same skin tone in every life.
+   Caste and class show only through work, dress and setting.
+   ========================================================= */
+const INK = "#1b1a2a", SKIN = "#9b6646", HAIR = "#1d1816", GREY = "#bdb6a9";
+const SHANKHA = ["#f3ede0", "#c42a2a"];
+const DRESS = {
+  child:     { sari: "#d98a2b", border: "#b8322a", blouse: "#3d6b4f", alt: "in a marigold skirt" },
+  bride:     { sari: "#b8292c", border: "#e0a83e", blouse: "#7a1b20", cover: true, sindoor: true, bangles: SHANKHA, alt: "in a red wedding sari, her head covered" },
+  married:   { sari: "#8f2730", border: "#e0a83e", blouse: "#5a1a22", cover: true, sindoor: true, bangles: SHANKHA, alt: "in a dark red sari with a gold border, her head covered" },
+  worker:    { sari: "#3f5182", border: "#c4432f", blouse: "#7a2a2a", sindoor: true, bangles: ["#aab2c4", "#aab2c4"], alt: "in a coarse indigo sari" },
+  mourning:  { sari: "#e9e3d6", border: "#e9e3d6", blouse: "#e9e3d6", alt: "in a plain white sari, her bangles gone" },
+  widow:     { sari: "#e9e3d6", border: "#d4ccbc", blouse: "#e9e3d6", cover: true, alt: "in a widow's white sari, her head covered" },
+  remarried: { sari: "#5f7d5c", border: "#b8322a", blouse: "#3e553d", cover: true, sindoor: true, bangles: ["#c42a2a", "#c42a2a"], alt: "in a green sari, married again" },
+  sanga:     { sari: "#6a5a8c", border: "#c4432f", blouse: "#4a3d66", sindoor: true, bangles: ["#c9a24a", "#c9a24a"], alt: "in a violet cotton sari, married again" },
+  teacher:   { sari: "#ece6d9", border: "#2f4a8a", blouse: "#ece6d9", alt: "in a white sari with a blue border" },
+  garden:    { sari: "#b98a3e", border: "#7a3a22", blouse: "#6a3a24", bangles: ["#c9ccd4", "#c9ccd4"], alt: "in a faded ochre sari" },
+  mill:      { sari: "#6d7a8d", border: "#4a5568", blouse: "#4a5568", alt: "in a grey-blue work sari" }
+};
+
+function figure(o) {
+  const d = DRESS[o.dress], props = o.props || [];
+  const hair = o.age === "old" ? GREY : HAIR;
+  const st = `stroke="${INK}" stroke-width="1.6" stroke-linejoin="round"`;
+  let g = "";
+  if (props.includes("basket")) g += `<path d="M72 26 L106 22 L100 84 L80 86 Z" fill="#a47c46" ${st}/><path d="M76 40 L103 37 M78 54 L102 51 M79 68 L101 66" stroke="#7a5a30" stroke-width="1.4"/>`;
+  g += `<path d="M74 58 L86 63 L93 124 L83 123 Z" fill="${d.sari}" ${st}/>`;
+  g += `<path d="M43 60 Q35 64 34 90 L32 127 Q32 134 37 134 Q41 133 41 127 L43 92 Z" fill="${SKIN}" ${st}/>`;
+  g += `<path d="M77 60 Q85 64 86 90 L88 127 Q88 134 83 134 Q79 133 79 127 L77 92 Z" fill="${SKIN}" ${st}/>`;
+  if (o.age === "child" && !d.cover) g += `<path d="M47 32 L42 78 L48 78 L51 38 Z M73 32 L78 78 L72 78 L69 38 Z" fill="${hair}"/>`;
+  g += `<path d="M43 100 L77 100 Q84 168 92 232 L28 232 Q36 168 43 100 Z" fill="${d.sari}" ${st}/>`;
+  g += `<path d="M29.2 222 Q60 227 90.8 222 L92 232 L28 232 Z" fill="${d.border}"/>`;
+  g += `<path d="M57 112 L52 230 M61 112 L59 230 M65 112 L67 230" stroke="${INK}" stroke-opacity="0.22" stroke-width="1.2"/>`;
+  g += `<path d="M44 58 Q60 53 76 58 L79 70 L77 101 L43 101 L41 70 Z" fill="${d.blouse}" ${st}/>`;
+  g += `<path d="M44 58 L35 66 L36 79 L43 77 Z M76 58 L85 66 L84 79 L77 77 Z" fill="${d.blouse}" ${st}/>`;
+  g += `<path d="M42 102 L52 112 L82 66 L75 57 L68 58 Z" fill="${d.sari}" ${st}/>`;
+  g += `<path d="M44 103 L69 60" stroke="${d.border}" stroke-width="3"/>`;
+  g += `<rect x="55" y="47" width="10" height="11" fill="${SKIN}" ${st}/>`;
+  g += `<ellipse cx="60" cy="34" rx="14" ry="17" fill="${SKIN}" ${st}/>`;
+  g += `<path d="M46 34 Q45 15 60 15 Q75 15 74 34 Q70 23 60 22 Q50 23 46 34 Z" fill="${hair}" ${st}/>`;
+  if (d.sindoor) g += `<path d="M60 16 L60 25" stroke="#d1222a" stroke-width="2.4" stroke-linecap="round"/>`;
+  if (props.includes("basket")) g += `<path d="M46 27 Q60 23 74 27" stroke="#6b4a2a" stroke-width="3" fill="none"/>`;
+  if (d.cover) {
+    g += `<path d="M42 56 Q38 30 46 17 Q60 5 74 17 Q82 30 78 56 L72 54 Q73 31 67 24 Q60 19 53 24 Q47 31 48 54 Z" fill="${d.sari}" ${st}/>`;
+    g += `<path d="M48 54 Q47 31 53 24 Q60 19 67 24 Q73 31 72 54" stroke="${d.border}" stroke-width="2.4" fill="none"/>`;
+  }
+  if (d.bangles) {
+    const [a, b] = d.bangles;
+    for (const x of [31.5, 78.5]) {
+      g += `<rect x="${x}" y="116" width="10" height="2.8" rx="1.2" fill="${a}" stroke="${INK}" stroke-width="0.7"/>`;
+      g += `<rect x="${x}" y="119.6" width="10" height="2.8" rx="1.2" fill="${b}" stroke="${INK}" stroke-width="0.7"/>`;
+    }
+  }
+  g += `<ellipse cx="50" cy="235" rx="6" ry="2.6" fill="${SKIN}"/><ellipse cx="70" cy="235" rx="6" ry="2.6" fill="${SKIN}"/>`;
+  if (props.includes("pot")) g += `<circle cx="32" cy="112" r="13" fill="#c08a3a" ${st}/><rect x="27" y="95" width="10" height="5" fill="#c08a3a" ${st}/>`;
+  if (props.includes("bundle")) g += `<circle cx="30" cy="142" r="12" fill="#cdb98e" ${st}/><path d="M24 132 L30 126 L36 132" stroke="${INK}" stroke-width="1.6" fill="none"/>`;
+  if (props.includes("book")) g += `<rect x="80" y="114" width="15" height="20" rx="1" fill="#2f4a8a" ${st}/><path d="M83 119 H92" stroke="#e3a63c" stroke-width="1.2"/>`;
+  if (props.includes("stick")) g += `<path d="M86 128 L99 236" stroke="#5a3a22" stroke-width="3.2" stroke-linecap="round"/>`;
+  return g;
+}
+
+const SKY = { dawn: ["#efbd8e", "#c97c62"], day: ["#bcd0d4", "#e8dcc2"], dusk: ["#e59a62", "#5c3d64"], night: ["#1c2145", "#3a3864"], smog: ["#8d8c96", "#cdb99e"] };
+function sky(t) {
+  const [a, b] = SKY[t] || SKY.day;
+  let s = `<defs><linearGradient id="sk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient>` +
+    `<radialGradient id="glow"><stop offset="0" stop-color="#ffd27a" stop-opacity="0.75"/><stop offset="1" stop-color="#ffd27a" stop-opacity="0"/></radialGradient></defs>` +
+    `<rect width="400" height="250" fill="url(#sk)"/>`;
+  if (t === "dusk") s += `<circle cx="330" cy="118" r="22" fill="#f7c47c" opacity="0.9"/>`;
+  if (t === "day") s += `<circle cx="60" cy="34" r="13" fill="#f6e2a2"/>`;
+  if (t === "dawn") s += `<circle cx="70" cy="104" r="18" fill="#f8d39a" opacity="0.85"/>`;
+  if (t === "night") {
+    s += `<circle cx="332" cy="34" r="10" fill="#efe6cf"/>`;
+    [[40, 20], [110, 36], [180, 14], [250, 28], [380, 54], [300, 12]].forEach(([x, y]) => s += `<circle cx="${x}" cy="${y}" r="1.2" fill="#efe6cf"/>`);
+  }
+  return s;
+}
+
+const BG = {
+  courtyard: l => {
+    const wall = l.rich ? "#d9bb8d" : "#c4a274", trim = l.rich ? "#b58c5c" : "#9f7f58";
+    let s = `<rect x="0" y="58" width="400" height="152" fill="${wall}"/><rect x="0" y="50" width="400" height="12" fill="${trim}"/>`;
+    if (l.rich) {
+      s += `<rect x="0" y="33" width="400" height="5" fill="${trim}"/>`;
+      for (let x = 4; x < 400; x += 14) s += `<rect x="${x}" y="38" width="6" height="12" fill="${trim}"/>`;
+      s += `<rect x="16" y="62" width="14" height="146" fill="#e6cfa2" stroke="#9a7048" stroke-width="1.5"/><rect x="370" y="62" width="14" height="146" fill="#e6cfa2" stroke="#9a7048" stroke-width="1.5"/>`;
+    } else {
+      s += `<ellipse cx="330" cy="150" rx="40" ry="26" fill="#b18e62" opacity="0.6"/><path d="M196 74 L206 98 L200 116 M352 66 L344 92" stroke="#86684a" stroke-width="1.5" fill="none"/>`;
+    }
+    s += `<rect x="0" y="206" width="400" height="44" fill="${l.rich ? "#ad7d50" : "#9a7852"}"/>`;
+    if (l.rich) for (let x = -40; x < 440; x += 40) s += `<path d="M${x} 206 L${x - 30} 250" stroke="#93673f" stroke-width="1.2"/>`;
+    s += `<path d="M50 208 L50 128 Q80 92 110 128 L110 208 Z" fill="#33231f" stroke="#8a5a3a" stroke-width="5"/>`;
+    s += `<path d="M140 150 L140 114 Q155 100 170 114 L170 150 Z" fill="#33231f" stroke="#8a5a3a" stroke-width="3"/><path d="M147.5 108 V150 M155 104 V150 M162.5 108 V150" stroke="#8a5a3a" stroke-width="2"/>`;
+    s += `<rect x="178" y="176" width="32" height="32" fill="#efe0bf" stroke="#8a5a3a" stroke-width="2"/><rect x="174" y="170" width="40" height="8" fill="#e5d1a6" stroke="#8a5a3a" stroke-width="2"/><path d="M194 170 V146" stroke="#3f5f36" stroke-width="2"/>`;
+    [[188, 152], [200, 148], [194, 140], [187, 145], [201, 157]].forEach(([x, y]) => s += `<circle cx="${x}" cy="${y}" r="5" fill="#4f7a46"/>`);
+    return s;
+  },
+  hut: l => {
+    let s = `<rect x="0" y="150" width="400" height="60" fill="#7f9a5c"/><rect x="0" y="204" width="400" height="46" fill="#a17d4d"/>`;
+    s += `<rect x="40" y="132" width="140" height="74" fill="#a8714a" stroke="#6e4a2e" stroke-width="2"/>`;
+    s += `<path d="M24 140 L110 84 L196 140 Z" fill="#c9a258" stroke="#8a6a32" stroke-width="2"/><path d="M45 128 H175 M66 114 H154 M86 101 H134" stroke="#a5843e" stroke-width="2"/>`;
+    s += `<rect x="96" y="160" width="28" height="46" fill="#2e201c"/>`;
+    if (l.rich) s += `<path d="M196 206 Q204 160 218 160 Q232 160 240 206 Z" fill="#d6b468" stroke="#a5843e" stroke-width="2"/>`;
+    s += `<path d="M350 206 L352 130" stroke="#6f7d3e" stroke-width="7"/><path d="M352 132 Q320 110 300 126 Q330 128 352 136 Z" fill="#5f8f4a"/><path d="M352 132 Q380 100 398 112 Q372 120 352 138 Z" fill="#6a9a50"/><path d="M352 130 Q350 96 364 84 Q358 110 354 132 Z" fill="#5a8a46"/>`;
+    return s;
+  },
+  field: () => {
+    let s = `<path d="M0 118 Q20 104 40 116 Q60 100 82 114 Q110 98 140 115 Q170 104 200 116 Q235 100 260 114 Q300 102 330 116 Q365 100 400 114 L400 124 L0 124 Z" fill="#4c6b47"/>`;
+    s += `<rect y="122" width="400" height="128" fill="#7fa25b"/>`;
+    for (let i = -8; i <= 8; i++) s += `<path d="M200 122 L${200 + i * 60} 250" stroke="#5f8a43" stroke-width="2"/>`;
+    [[40, 160], [150, 176], [300, 168], [90, 206], [330, 214]].forEach(([x, y]) => s += `<path d="M${x} ${y} h26" stroke="#c4d8bb" stroke-width="1.5" opacity="0.6"/>`);
+    s += `<rect x="318" y="100" width="22" height="14" fill="#a8714a"/><path d="M314 102 L329 90 L344 102 Z" fill="#c9a258"/>`;
+    s += `<path d="M0 234 Q200 226 400 236 L400 250 L0 250 Z" fill="#b28f5e"/>`;
+    s += `<path d="M64 124 Q58 80 70 40" stroke="#6b5434" stroke-width="5" fill="none"/><path d="M70 40 Q50 30 34 46 M70 40 Q60 22 44 22 M70 40 Q84 22 100 28 M70 40 Q92 38 104 54 M70 40 Q72 58 60 68" stroke="#3f6a3a" stroke-width="4" fill="none" stroke-linecap="round"/>`;
+    return s;
+  },
+  town: () => {
+    const cols = ["#c8a786", "#b98f77", "#d6c09e", "#a98e7c", "#c9ad8f"];
+    let s = "";
+    [[0, 70, 90], [86, 50, 80], [162, 80, 70], [228, 60, 90], [314, 40, 86]].forEach(([x, y, w], i) => {
+      s += `<rect x="${x}" y="${y}" width="${w}" height="${210 - y}" fill="${cols[i]}" stroke="#6e5646" stroke-width="1.5"/>`;
+      for (let yy = y + 14; yy < 186; yy += 34) for (let xx = x + 12; xx < x + w - 14; xx += 22) s += `<rect x="${xx}" y="${yy}" width="10" height="16" fill="#3a2e2c"/>`;
+      s += `<rect x="${x}" y="${y + 40}" width="${w}" height="3" fill="#6e5646"/>`;
+    });
+    return s + `<rect y="206" width="400" height="44" fill="#857565"/>`;
+  },
+  station: () => {
+    let s = `<rect y="60" width="400" height="9" fill="#4a3434"/>`;
+    [40, 150, 260, 370].forEach(x => s += `<rect x="${x}" y="69" width="5" height="134" fill="#4a3434"/>`);
+    s += `<circle cx="20" cy="92" r="18" fill="#b9b4ae" opacity="0.8"/><circle cx="46" cy="74" r="14" fill="#b9b4ae" opacity="0.7"/><circle cx="70" cy="62" r="10" fill="#b9b4ae" opacity="0.6"/>`;
+    s += `<rect x="-10" y="118" width="210" height="76" rx="4" fill="#6b2f2b" stroke="#2e1a18" stroke-width="2"/>`;
+    for (let x = 6; x < 190; x += 30) s += `<rect x="${x}" y="132" width="18" height="16" fill="#e8c98a"/>`;
+    [30, 70, 140, 180].forEach(x => s += `<circle cx="${x}" cy="198" r="9" fill="#2a2222"/>`);
+    return s + `<rect y="202" width="400" height="48" fill="#a49379"/><rect y="202" width="400" height="4" fill="#d8c9a8"/>`;
+  },
+  ghat: () => {
+    let s = `<rect y="96" width="400" height="16" fill="#5d4d5e"/><path d="M30 112 L30 86 Q45 50 60 86 L60 112 Z M70 112 L70 94 Q80 70 90 94 L90 112 Z M310 112 L310 80 Q328 40 346 80 L346 112 Z" fill="#3c3048"/>`;
+    s += `<rect y="110" width="400" height="70" fill="#4f6380"/>`;
+    [[30, 130], [140, 142], [250, 128], [330, 158], [80, 164]].forEach(([x, y]) => s += `<path d="M${x} ${y} h40" stroke="#8aa0bb" stroke-width="1.2" opacity="0.6"/>`);
+    [[120, 150], [180, 138], [214, 160], [290, 146]].forEach(([x, y]) => s += `<circle cx="${x}" cy="${y}" r="2.6" fill="#ffc861"/>`);
+    for (let i = 0; i < 6; i++) s += `<rect y="${176 + i * 13}" width="400" height="13" fill="${i % 2 ? "#b2966f" : "#c4a983"}"/><rect y="${176 + i * 13}" width="400" height="2" fill="#d9c6a2"/>`;
+    return s;
+  },
+  school: () => {
+    let s = `<rect x="0" y="66" width="400" height="140" fill="#dccdb0" stroke="#7a6248" stroke-width="2"/><rect x="0" y="56" width="400" height="14" fill="#a8463a"/>`;
+    for (let i = 0; i < 6; i++) { const x = 12 + i * 66; s += `<path d="M${x} 196 L${x} 120 Q${x + 23} 96 ${x + 46} 120 L${x + 46} 196 Z" fill="#4a3d38"/>`; }
+    return s + `<rect y="204" width="400" height="46" fill="#b39a72"/>`;
+  },
+  tea: () => {
+    let s = `<path d="M0 120 Q80 70 170 100 Q260 60 400 96 L400 250 L0 250 Z" fill="#7a9a73"/><path d="M0 140 Q120 110 230 132 Q320 112 400 128 L400 250 L0 250 Z" fill="#5d8159"/>`;
+    [70, 190, 340].forEach(x => s += `<path d="M${x} 150 L${x} 92" stroke="#5a4a36" stroke-width="2.5"/><ellipse cx="${x}" cy="90" rx="30" ry="7" fill="#4c6d45"/>`);
+    for (let r = 0; r < 7; r++) {
+      const y = 150 + r * 15, rad = 9 + r * 1.3;
+      for (let x = -10 + (r % 2) * rad; x < 410; x += rad * 1.8) s += `<circle cx="${x.toFixed(1)}" cy="${y}" r="${rad.toFixed(1)}" fill="${r % 2 ? "#3f6b45" : "#477a4e"}"/>`;
+    }
+    return s;
+  },
+  mill: () => {
+    let s = `<circle cx="70" cy="10" r="16" fill="#6d6b72" opacity="0.8"/><circle cx="96" cy="0" r="14" fill="#6d6b72" opacity="0.6"/>`;
+    s += `<rect x="52" y="14" width="20" height="192" fill="#7d3b2f" stroke="#3e1d17" stroke-width="2"/>`;
+    s += `<rect x="0" y="150" width="52" height="56" fill="#74463a"/>`;
+    s += `<rect x="90" y="110" width="310" height="96" fill="#8b4b3b" stroke="#3e1d17" stroke-width="2"/>`;
+    let p = "M90 110"; for (let x = 90; x < 400; x += 40) p += ` L${x + 30} 82 L${x + 40} 110`;
+    s += `<path d="${p} Z" fill="#57525c"/>`;
+    for (let x = 104; x < 400; x += 28) s += `<rect x="${x}" y="132" width="10" height="22" fill="#e1c27c" opacity="0.85"/>`;
+    return s + `<rect y="204" width="400" height="46" fill="#6c6357"/>`;
+  },
+  temple: () => {
+    let s = `<rect y="200" width="400" height="50" fill="#ad885a"/>`;
+    s += `<rect x="44" y="150" width="84" height="54" fill="#e6d7b6" stroke="#7a5a3a" stroke-width="2"/><path d="M76 204 V176 Q86 164 96 176 V204 Z" fill="#3a2a24"/>`;
+    s += `<path d="M50 150 Q86 66 122 150 Z" fill="#ecdec0" stroke="#7a5a3a" stroke-width="2"/><path d="M62 128 H110 M72 108 H100" stroke="#7a5a3a" stroke-width="1.5"/>`;
+    s += `<path d="M86 82 V52" stroke="#5a3a22" stroke-width="2"/><path d="M86 52 L106 58 L86 64 Z" fill="#c4432f"/>`;
+    s += `<path d="M340 204 Q344 160 336 130 M358 204 Q354 160 364 130" stroke="#5a4632" stroke-width="9" fill="none"/>`;
+    s += `<ellipse cx="350" cy="112" rx="62" ry="34" fill="#3f5f3a"/><ellipse cx="320" cy="96" rx="34" ry="22" fill="#4a6e42"/><ellipse cx="378" cy="92" rx="30" ry="20" fill="#4a6e42"/>`;
+    s += `<path d="M304 124 V188 M318 128 V176 M390 124 V182" stroke="#5a4632" stroke-width="1.5"/>`;
+    return s;
+  },
+  steamer: () => {
+    let s = `<rect y="104" width="400" height="12" fill="#57705a"/><rect y="114" width="400" height="100" fill="#5c7488"/>`;
+    [[220, 130], [300, 150], [250, 176], [340, 190]].forEach(([x, y]) => s += `<path d="M${x} ${y} h44" stroke="#9fb3c4" stroke-width="1.2" opacity="0.6"/>`);
+    s += `<circle cx="110" cy="96" r="12" fill="#a9a7a6" opacity="0.7"/><circle cx="128" cy="82" r="9" fill="#a9a7a6" opacity="0.5"/>`;
+    s += `<rect x="96" y="112" width="14" height="36" fill="#b23a2c"/><rect x="96" y="112" width="14" height="6" fill="#222"/>`;
+    s += `<rect x="40" y="148" width="130" height="20" fill="#dccfb2" stroke="#2c2a30" stroke-width="1.5"/>`;
+    for (let x = 48; x < 166; x += 14) s += `<rect x="${x}" y="153" width="7" height="8" fill="#2c2a30"/>`;
+    s += `<path d="M14 168 L196 168 L184 186 L26 186 Z" fill="#2c2a30"/>`;
+    return s + `<path d="M0 206 Q200 198 400 208 L400 250 L0 250 Z" fill="#8c7556"/>`;
+  }
+};
+const BGALT = {
+  courtyard: "in the courtyard of a house", hut: "outside a mud and thatch house", field: "in a rice field",
+  town: "on a town street", station: "on a railway platform", ghat: "on the river steps at Kashi",
+  school: "outside a school verandah", tea: "among the tea bushes", mill: "outside a jute mill",
+  temple: "outside a village temple", steamer: "on a riverbank beside a steamer"
+};
+
+function lampSvg(x, y) {
+  return `<circle cx="${x}" cy="${y - 16}" r="40" fill="url(#glow)"/>` +
+    `<path d="M${x - 15} ${y - 6} Q${x} ${y + 5} ${x + 15} ${y - 6} Z" fill="#a8603a" stroke="${INK}" stroke-width="1.5"/>` +
+    `<path class="flame" d="M${x} ${y - 26} Q${x + 5} ${y - 15} ${x} ${y - 8} Q${x - 5} ${y - 15} ${x} ${y - 26} Z" fill="#ffc35a"/>`;
+}
+
+function paint(lk) {
+  const prefix = lk.age === "child" ? "A girl" : lk.age === "old" ? "An old woman" : "A woman";
+  const alt = lk.lamp ? "An oil lamp burning where she stood, " + BGALT[lk.bg] : prefix + " " + DRESS[lk.dress].alt + ", " + BGALT[lk.bg];
+  let svg = `<svg viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice" role="img" aria-label="${esc(alt)}">` + sky(lk.time) + BG[lk.bg](lk);
+  if (lk.lamp) svg += lampSvg(268, 238);
+  else {
+    const sc = lk.age === "child" ? 0.6 : lk.age === "old" ? 0.8 : 0.84;
+    svg += `<ellipse cx="268" cy="241" rx="${34 * sc + 6}" ry="4" fill="#000" opacity="0.18"/>`;
+    svg += `<g transform="translate(${(268 - 60 * sc).toFixed(1)} ${(240 - 236 * sc).toFixed(1)}) scale(${sc})"><g class="fig">${figure(lk)}</g></g>`;
+  }
+  return svg + "</svg>";
+}
+
+/* Which picture belongs to which moment of her life */
+function look(i, phase) {
+  const p = s.path, sub = s.sub, rich = L();
+  const base = { rich, age: "adult", time: "day", props: [] };
+  if (i === 0) return { ...base, bg: U() ? "courtyard" : "hut", time: "dusk", age: "child", dress: phase === "pre" ? "child" : "bride" };
+  if (i === 1) return U() ? { ...base, bg: "courtyard", dress: "married" } : { ...base, bg: "field", dress: "worker", props: phase === "pre" ? ["pot"] : [] };
+  if (i === 2) {
+    if (phase === "pre") return { ...base, bg: U() ? "courtyard" : "hut", time: "night", dress: "mourning" };
+    return ({
+      remarry: { ...base, bg: "town", dress: "remarried" },
+      widow: { ...base, bg: "courtyard", dress: "widow" },
+      ranaway: { ...base, bg: "station", time: "dawn", dress: "widow", props: ["bundle"] },
+      sanga: { ...base, bg: "hut", dress: "sanga" },
+      respectable: { ...base, bg: "field", dress: "widow" },
+      migrant: { ...base, bg: "steamer", time: "dawn", dress: "garden", props: ["bundle"] }
+    })[p];
+  }
+  if (i === 3) {
+    if (phase === "post" && sub) return ({
+      kashi: { ...base, bg: "ghat", time: "dusk", dress: "widow", props: ["bundle"] },
+      home: { ...base, bg: "courtyard", time: "night", dress: "widow" },
+      teacher: { ...base, bg: "school", dress: "teacher", props: ["book"] },
+      returned: { ...base, bg: "courtyard", time: "dusk", dress: "widow" },
+      garden: { ...base, bg: "tea", dress: "garden", props: ["basket"] },
+      mill: { ...base, bg: "mill", time: "smog", dress: "mill" }
+    })[sub];
+    return ({
+      remarry: { ...base, bg: "town", dress: "remarried" },
+      widow: { ...base, bg: "courtyard", time: "night", dress: "widow" },
+      ranaway: { ...base, bg: "school", dress: "widow", props: ["book"] },
+      sanga: { ...base, bg: "hut", dress: "sanga" },
+      respectable: { ...base, bg: "field", dress: "widow" },
+      migrant: { ...base, bg: "tea", dress: "garden", props: ["basket"] }
+    })[p];
+  }
+  const old = { ...base, age: "old", time: "dusk", props: ["stick"] };
+  if ((p === "sanga" || p === "respectable") && !rich) return { ...old, bg: "temple", dress: p === "sanga" ? "sanga" : "widow" };
+  if (p === "sanga") return { ...old, bg: "hut", dress: "sanga" };
+  if (p === "respectable") return { ...old, bg: "hut", dress: "widow" };
+  if (p === "widow") return sub === "kashi" ? { ...old, bg: "ghat", dress: "widow" } : { ...old, bg: "courtyard", dress: "widow" };
+  if (p === "remarry") return { ...old, bg: "town", dress: "remarried" };
+  if (p === "ranaway") return sub === "teacher" ? { ...old, bg: "school", dress: "teacher" } : { ...old, bg: "courtyard", dress: "widow" };
+  return sub === "garden" ? { ...old, bg: "tea", dress: "garden" } : { ...old, bg: "mill", time: "smog", dress: "mill" };
+}
+
+/* =========================================================
+   RENDERING
+   ========================================================= */
+const app = document.getElementById("app");
+const stageEl = document.getElementById("stage");
+const bandEl = document.getElementById("band");
+const threadEl = document.getElementById("thread");
+const hudWho = document.getElementById("hudWho");
+const esc = t => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const withVerify = t => esc(t).replace(/\[verify([^\]]*)\]/g, '<span class="verify">[verify$1]</span>');
+const NAMES = ["Kusum", "Malati", "Saroj", "Champa", "Bimala", "Sona"];
+const LABELS = ["Child", "Wife", "Widow", "After", "Old age"];
+let view = "start";
+let keyActions = {};
+
+function ps(arr, start) { return arr.map((t, k) => `<p style="--i:${start + k}">${withVerify(t)}</p>`).join(""); }
+
+function histBox(items, year) {
+  if (!items || !items.length) return "";
+  const rows = items.map(h => {
+    const names = h.src.map(k => SOURCES[k].cite).join("; ");
+    return "<p>" + withVerify(h.t) + (h.verify ? ' <span class="verify">[verify]</span>' : "") +
+      '<span class="src">Source: ' + esc(names) + (h.pp ? ", " + esc(h.pp) : "") + "</span></p>";
+  }).join("");
+  return `<div class="archive"><div class="head"><span>What actually happened</span><span>${esc(year || "")}</span></div>${rows}</div>`;
+}
+
+function showStage(lk, cap) {
+  stageEl.hidden = false; bandEl.hidden = false; app.classList.remove("solo");
+  stageEl.innerHTML = paint(lk) + (cap ? `<div class="cap">${esc(cap)}</div>` : "");
+}
+function hideStage() { stageEl.hidden = true; bandEl.hidden = true; app.classList.add("solo"); }
+
+function drawThread(i) {
+  if (i == null) { threadEl.hidden = true; return; }
+  threadEl.hidden = false;
+  let h = '<div class="thread" aria-hidden="true">';
+  LABELS.forEach((_, k) => {
+    if (k) h += `<div class="seg${k <= i ? " done" : ""}"></div>`;
+    h += `<div class="node${k < i ? " done" : k === i ? " now" : ""}"></div>`;
+  });
+  h += `</div><div class="thread-labels">${LABELS.map((l, k) => `<span class="${k === i ? "now" : ""}">${l}</span>`).join("")}</div>`;
+  threadEl.innerHTML = h;
+}
+const ageWord = a => a.replace(/^You are /, "").replace(/\.$/, "");
+function hud(sc) { hudWho.textContent = s ? `${s.name} · age ${ageWord(sc.age)} · ${sc.year}` : "Given Away"; }
+
+function renderStart() {
+  view = "start"; s = null; keyActions = {};
+  drawThread(null);
+  hudWho.textContent = "Given Away";
+  let caste = null, cls = null, name = NAMES[0];
+  const preview = () => showStage({ bg: caste === "lower" ? "hut" : "courtyard", rich: cls !== "poor", time: "dusk", age: "child", dress: "child", props: [] }, "1879 · before the wedding");
+  preview();
+  app.innerHTML = `<div class="reveal">
+    <div class="eyebrow" style="--i:0">A life in five chapters</div>
+    <h1 style="--i:1">Given Away</h1>
+    <p class="lede" style="--i:2">You will live one woman's life in colonial India, from 1879 into the 1930s. At each stage you will be offered a choice. Choose carefully. It will not help.</p>
+    <div class="picker" style="--i:3"><div class="label">Her name</div>
+      <div class="opts names" id="nm">${NAMES.map((n, k) => `<button type="button" class="opt" data-v="${n}" aria-pressed="${k === 0}">${n}</button>`).join("")}</div></div>
+    <div class="picker" style="--i:4"><div class="label">Her family's caste</div>
+      <div class="opts" id="caste">
+        <button type="button" class="opt" data-v="upper" aria-pressed="false">Upper caste (Brahmin)<small>The strictest rules on marriage and widowhood.</small></button>
+        <button type="button" class="opt" data-v="lower" aria-pressed="false">Lower caste, labouring family<small>Older customs allow remarriage. The work and the landlord's men are another matter.</small></button>
+      </div></div>
+    <div class="picker" style="--i:5"><div class="label">Her family's means</div>
+      <div class="opts" id="cls">
+        <button type="button" class="opt" data-v="landed" aria-pressed="false">Landed<small>There is property, which means there is something to lose.</small></button>
+        <button type="button" class="opt" data-v="poor" aria-pressed="false">Poor<small>There is no land and no savings. Every bad harvest becomes a debt.</small></button>
+      </div></div>
+    <p class="note" style="--i:6;margin-top:18px">Three hidden measures, Honour, Security and Autonomy, change with every choice and are revealed at the end. Content note: child marriage, domestic violence, sexual exploitation, abortion and death. These happen in the text only; nothing is shown on screen.</p>
+    <div class="foot" style="--i:7;margin-top:8px"><button type="button" class="primary" id="begin" disabled>Begin her life</button></div>
+  </div>`;
+  const begin = document.getElementById("begin");
+  const wire = (id, setter) => {
+    const box = document.getElementById(id);
+    box.querySelectorAll("button").forEach(b => b.onclick = () => {
+      box.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", "false"));
+      b.setAttribute("aria-pressed", "true");
+      setter(b.dataset.v);
+      begin.disabled = !(caste && cls);
+    });
+  };
+  wire("nm", v => name = v);
+  wire("caste", v => { caste = v; preview(); });
+  wire("cls", v => { cls = v; preview(); });
+  begin.onclick = () => { s = newState(caste, cls); s.name = name; renderScene(); };
+}
+
+function renderScene() {
+  view = "scene";
+  const sc = SCENES[s.scene]();
+  hud(sc); drawThread(s.scene);
+  showStage(look(s.scene, "pre"), `${sc.year} · age ${ageWord(sc.age)}`);
+  const n = sc.body.length;
+  app.innerHTML = `<div class="reveal">
+    <div class="eyebrow" style="--i:0">Chapter ${s.scene + 1} of ${SCENES.length}</div>
+    <h2 style="--i:1">${esc(sc.title)}</h2>
+    <div class="meta" style="--i:2">${esc(sc.year)} · ${esc(sc.age)}</div>
+    ${ps(sc.body, 3)}
+    <div class="choices" id="ch" style="--i:${3 + n}"></div>
+    <div class="keyhint" style="--i:${4 + n}">Choose with a click, or press ${sc.choices.map((_, k) => k + 1).join(", ")}.</div>
+  </div>`;
+  const ch = document.getElementById("ch");
+  keyActions = {};
+  sc.choices.forEach((c, k) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "choice";
+    b.innerHTML = `<span class="k">${k + 1}</span><span>${esc(c.label)}</span>`;
+    b.onclick = () => choose(sc, c);
+    ch.appendChild(b);
+    keyActions[String(k + 1)] = b.onclick;
+  });
+  window.scrollTo(0, 0);
+}
+
+function choose(sc, c) {
+  apply(c.d);
+  if (c.set) s.path = c.set;
+  if (c.sub) s.sub = c.sub;
+  s.n++;
+  s.last = { sc, c };
+  s.lastScene = s.scene;
+  renderOutcome(sc, c);
+}
+
+function renderOutcome(sc, c) {
+  view = "outcome";
+  hud(sc); drawThread(s.scene);
+  showStage(look(s.scene, "post"), `${sc.year} · age ${ageWord(sc.age)}`);
+  const hist = (c.history || []).concat(sc.history || []);
+  const last = s.scene + 1 >= SCENES.length;
+  app.innerHTML = `<div class="reveal">
+    <div class="eyebrow" style="--i:0">Chapter ${s.scene + 1} of ${SCENES.length}</div>
+    <h2 style="--i:1">${esc(sc.title)}</h2>
+    <div class="chosen" style="--i:2">You chose: ${esc(c.label)}</div>
+    ${ps(c.out, 3)}
+    <div class="voice" style="--i:${3 + c.out.length}"><span class="who">${esc(c.voice.who)}</span>"${esc(c.voice.line)}"</div>
+    <div style="--i:${4 + c.out.length}">${histBox(hist, sc.year)}</div>
+    <div class="foot" style="--i:${5 + c.out.length}"><button type="button" class="primary" id="next">${last ? "See how her life ended" : "Continue to chapter " + (s.scene + 2)}</button></div>
+  </div>`;
+  const go = () => { s.scene++; if (s.scene < SCENES.length) renderScene(); else renderEnd(); };
+  document.getElementById("next").onclick = go;
+  keyActions = { Enter: go };
+  window.scrollTo(0, 0);
+}
+
+function meter(name, sub, v) {
+  return `<div class="meter"><div class="row"><span>${name}</span><span>${v} / 100</span></div>
+    <div class="sub">${sub}</div><div class="track"><div class="fill" data-w="${v}"></div></div></div>`;
+}
+
+function renderEnd() {
+  view = "end"; keyActions = {};
+  hudWho.textContent = `${s.name} · her life`;
+  drawThread(5);
+  showStage({ ...look(4, "post"), lamp: true, time: "night" }, "In memory");
+  app.innerHTML = `<div class="reveal">
+    <div class="eyebrow" style="--i:0">The end of her life</div>
+    <h2 style="--i:1">${esc(s.name)}</h2>
+    <p style="--i:2">${esc(epilogue().replace(/^She /, s.name + " "))}</p>
+    <h3 style="--i:3">The measures, hidden until now</h3>
+    <div style="--i:4">
+      ${meter("Honour", "Standing in the community's eyes", s.H)}
+      ${meter("Security", "Money, shelter, safety", s.S)}
+      ${meter("Autonomy", "Control over her own life", s.A)}
+    </div>
+    <div class="verdict" style="--i:5">You made ${s.n} choices. None of them was yours.</div>
+    <h3 style="--i:6">The doors she did not open</h3>
+    <ul class="plain" style="--i:7">${notTaken().map(t => "<li>" + esc(t) + "</li>").join("")}</ul>
+    <p class="note" style="--i:8">Every path through this game leaves at least one measure low. The system set the prices; she only chose which one to pay.</p>
+    <div class="foot" style="--i:9">
+      <button type="button" class="primary" id="again">Live another life</button>
+      <button type="button" class="ghost" id="m">Method and limitations</button>
+      <button type="button" class="ghost" id="r">Sources</button>
+    </div>
+  </div>`;
+  setTimeout(() => app.querySelectorAll(".fill").forEach(f => f.style.width = f.dataset.w + "%"), 500);
+  document.getElementById("again").onclick = renderStart;
+  document.getElementById("m").onclick = () => renderMethod("end");
+  document.getElementById("r").onclick = () => renderSources("end");
+  window.scrollTo(0, 0);
+}
+
+function currentContext() {
+  if (view === "end") return "end";
+  if (view === "scene" || view === "outcome") return "game";
+  if (view === "method" || view === "sources") return null;
+  return "start";
+}
+let backTo = "start";
+function backButton(from) {
+  return `<div class="foot"><button type="button" class="primary" id="back">${from === "end" ? "Back to her life" : from === "game" ? "Back to the game" : "Back to the start"}</button></div>`;
+}
+function wireBack(from) {
+  document.getElementById("back").onclick = () => {
+    if (from === "end") renderEnd();
+    else if (from === "game") {
+      if (s.last && s.lastScene === s.scene) renderOutcome(s.last.sc, s.last.c); else renderScene();
+    } else renderStart();
+  };
+}
+function pageFrom(from) {
+  const ctx = currentContext();
+  if (from) return from;
+  if (ctx) { backTo = ctx; return ctx; }
+  return backTo;
+}
+
+function renderMethod(from) {
+  from = pageFrom(from); backTo = from;
+  view = "method"; keyActions = {};
+  hideStage(); drawThread(null); hudWho.textContent = "Method and limitations";
+  app.innerHTML = `
+    <h2>Method and limitations</h2>
+    <div class="meta">How this game was built and what it leaves out</div>
+    <p>The woman you play is a composite. She is no single historical person, and her family's lines are written for the game; none of them quotes a real individual. Every named person, case and statute in the "What actually happened" slips is real. Each slip names its source, and the full list is on the Sources page.</p>
+    <p>The game is built around Module 6 (Gender and Law) of History-2. Its three readings supply most of the history: Tanika Sarkar's "Wicked Widows" for the upper-caste widow and the 1856 Act, Janaki Nair's "The Devadasi, Dharma and the State" for temple dedication and the basavi, and Samita Sen's "Without His Consent?" for women's migration to the mills and tea gardens. The module film, Chokher Bali, shapes one branch of the widow's story. Ranajit Guha's "Chandra's Death" from Module 1 appears where Sarkar cites it.</p>
+    <h3>About the pictures</h3>
+    <p>The figure has no face, so she can stand for many women. Her skin tone stays the same in every life. Caste and class show in her work and her clothes, and the clothes follow the record: a married woman wears vermilion in her parting and conch and lac bangles, while a widow wears unbordered white with her head covered. Labouring women wear coarse cotton. Violence and tonsuring are described in the text and never drawn. When her life ends, an oil lamp takes her place on screen.</p>
+    <h3>What is simplified</h3>
+    <p>Region is the biggest simplification. The upper-caste path draws mainly on Bengal (Sarkar), with Bombay and Pune for Rukhmabai, Ramabai, the Phules and Tarabai Shinde. The lower-caste path mixes Bengal, Bihar and Chhotanagpur (Sen) with Mysore (Nair, for the basavi). Customs on remarriage, dowry, bride-price and seclusion differed sharply between these places.</p>
+    <p>Two categories stand in for a graded hierarchy of hundreds of jatis. The "lower caste" path merges cultivating Shudra castes, Dalit labouring castes and the Adivasi communities from which Assam recruiters drew heavily. Oppression was graded, as Ambedkar and Chakravarti argue, and the game shows only two of its grades.</p>
+    <p>The game covers Hindu women only. Muslim, Christian and Parsi women lived under different personal laws, which Module 6 also covers. Landed and poor are likewise two points on a long scale of class.</p>
+    <p>Fitting one life between 1870 and the 1930s compresses events. Some are placed where they fall in her lifetime; for example, she would only have read about Rukhmabai's case once it reached the newspapers in 1885. Finally, Honour, Security and Autonomy are a device for showing trade-offs. The numbers measure nothing real.</p>
+    <h3>Whose voices</h3>
+    <p>Most of the record comes from reformers, officials, magistrates, census takers and later scholars. Women's own words survive mainly in a few published writings and in court depositions. The game inherits that bias: it can describe her life in detail but cannot recover how she understood it.</p>
+    <h3>What the game's argument flattens</h3>
+    <p>The game argues that every choice was rigged. Sarkar's reading is more complicated. She argues that the 1856 Act lost the social battle but unsettled older certainties and made new ideas, including equality and consent, sayable for the first time. Sen likewise shows that migration, though exploitative, was sometimes the only exit from an oppressive family. A player who comes away thinking nothing ever changed has missed half of what these historians argue.</p>
+    ${backButton(from)}`;
+  wireBack(from);
+  window.scrollTo(0, 0);
+}
+
+function renderSources(from) {
+  from = pageFrom(from); backTo = from;
+  view = "sources"; keyActions = {};
+  hideStage(); drawThread(null); hudWho.textContent = "Sources";
+  const order = ["sarkar", "nair", "sen", "chokherbali", "guha", "ambedkar", "chakravarti", "act1856", "vidyasagar", "shinde", "ramabai", "phule", "rukhmabai", "aoc1891", "sarda", "sati1829", "assam1901"];
+  app.innerHTML = `
+    <h2>Sources</h2>
+    <div class="meta">Every historical claim in the game points to one of these</div>
+    <div class="srclist">
+      ${order.map(k => {
+        const x = SOURCES[k];
+        return `<p>${x.module ? '<span class="tag">' + esc(x.module.toUpperCase()) + "</span><br>" : ""}<strong>${esc(x.author)}</strong> (${esc(x.year)}). ${esc(x.title)}.<br>${withVerify(x.note)}</p>`;
+      }).join("")}
+    </div>
+    ${backButton(from)}`;
+  wireBack(from);
+  window.scrollTo(0, 0);
+}
+
+document.getElementById("navMethod").onclick = () => renderMethod();
+document.getElementById("navSources").onclick = () => renderSources();
+document.addEventListener("keydown", e => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.key === "Enter" && document.activeElement && document.activeElement.tagName === "BUTTON" && document.activeElement.id !== "next") return;
+  const f = keyActions[e.key];
+  if (f) { e.preventDefault(); f(); }
+});
+
+/* Keep a game in progress when the page is updated while open */
+window.claude?.hot?.snapshot?.(() => ({ s, view }));
+function start(data) {
+  try {
+    if (data && data.s) {
+      s = data.s;
+      if (data.view === "end") return renderEnd();
+      if (s.last && s.lastScene === s.scene) return renderOutcome(s.last.sc, s.last.c);
+      if (s.scene < SCENES.length) return renderScene();
+    }
+  } catch (e) { /* fall through to a fresh start */ }
+  renderStart();
+}
+window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+</script>
+
+</body>
+</html>
